@@ -72,7 +72,12 @@ public class Bot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setReplyMarkup(replyKeyboardMarkup);
-        getMessage(inputText, sendMessage);
+        try {
+            sendMessage.setText(getMessage(inputText, sendMessage));
+            execute(sendMessage);
+        } catch (TelegramApiException e){
+            e.printStackTrace();
+        }
     }
 
     private String getCovidStats() {
@@ -110,7 +115,7 @@ public class Bot extends TelegramLongPollingBot {
         return result;
     }
 
-    private void getMessage(String msg, SendMessage sendMessage) {
+    private String getMessage(String msg, SendMessage sendMessage) {
         ArrayList<KeyboardRow> buttons = new ArrayList<>();
         KeyboardRow keyBoardFirstRow = new KeyboardRow();
         KeyboardRow keyBoardSecondRow = new KeyboardRow();
@@ -118,7 +123,6 @@ public class Bot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(false);
         msg = msg.toLowerCase();
-
         if (msg.equals("меню")) {
             buttons.clear();
             keyBoardFirstRow.clear();
@@ -128,6 +132,8 @@ public class Bot extends TelegramLongPollingBot {
             buttons.add(keyBoardFirstRow);
             buttons.add(keyBoardSecondRow);
             replyKeyboardMarkup.setKeyboard(buttons);
+            return "Выбрать";
+
         }
         if (msg.equals("погода")) {
             try {
@@ -141,6 +147,7 @@ public class Bot extends TelegramLongPollingBot {
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
+            return "Выбрать";
         }
         if (msg.equals("новости")) {
             try {
@@ -153,6 +160,7 @@ public class Bot extends TelegramLongPollingBot {
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
+            return "Выбрать";
         }
         if (msg.equals("статистика по covid-19")) {
             sendMessage.setText("Число заболевших в Саратовской области  " + getCovidStats());
@@ -161,7 +169,9 @@ public class Bot extends TelegramLongPollingBot {
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
+            return "Выбрать";
         }
+        return "";
     }
 
 
