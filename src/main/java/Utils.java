@@ -1,10 +1,18 @@
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Utils {
     WebServices webServices = new WebServices();
@@ -13,6 +21,38 @@ public class Utils {
         final Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -day);
         return cal.getTime();
+    }
+
+    //reading telegram bot name, telegram token, weather API key from the file
+    public String[] initAPITokens() throws FileNotFoundException {
+        String[] APITokens = new String[3];
+        FileInputStream fis = new FileInputStream("APItokens.txt");
+        Scanner sc = new Scanner(fis);
+        if (sc.hasNextLine())
+            APITokens[0] = sc.nextLine();
+        if (sc.hasNextLine())
+            APITokens[1] = sc.nextLine();
+        if (sc.hasNextLine())
+            APITokens[2] = sc.nextLine();
+        sc.close();
+        return APITokens;
+}
+
+    //removing old csv files
+    public void cleanDirectoryFromCSV() {
+        try (Stream<Path> walk = Files.walk(Paths.get(""))) {
+            walk.map(x -> x.toString())
+                    .filter(f -> f.endsWith(".csv")).collect(Collectors.toList())
+                    .forEach(f -> {
+                        try {
+                            Files.deleteIfExists(Paths.get(f));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public String processCSVFile() {

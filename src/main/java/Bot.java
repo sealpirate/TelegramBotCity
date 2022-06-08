@@ -15,6 +15,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 import org.telegram.telegrambots.exceptions.TelegramApiRequestException;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -38,17 +39,25 @@ public class Bot extends TelegramLongPollingBot {
     final int RECONNECT_PAUSE = 10000;
     public WeatherJson weatherJson;
     // Contact BotFather https://telegram.me/BotFather
-    String userName = "getTelegramBotUserName";
-    String token = "getTelegramBotToken";
+    String userName;
+    String token;
     WebServices webServices = new WebServices();
     // Клавиатура
     ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
     Utils utils = new Utils();
     // Получить API можно на https://openweathermap.org/appid
-    private String weatherApiKey = "getApiFromOpenWeatherMap";
+    String weatherApiKey;
 
-    public void botConnect() {
+    public void botConnect(){
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
+        try {
+            String[] APItokens = utils.initAPITokens();
+            userName = APItokens[0];
+            token = APItokens[1];
+            weatherApiKey = APItokens[2];
+        } catch (FileNotFoundException e){
+            e.printStackTrace();
+        }
         try {
             telegramBotsApi.registerBot(this);
             log.info("TelegramAPI started. Look for messages");
@@ -81,12 +90,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private String getCovidStats() {
-
-        // TODO проверить на наличие каждого из файлов
-        // TODO скачать недостающее
-        // TODO распарсить каждый из файлов? но если уже скачан и уже использовали,
-        // TODO можно ли сохранять в переменную, чтобы не парсить?
-
+        utils.cleanDirectoryFromCSV();
         return utils.processCSVFile();
     }
 
@@ -94,7 +98,6 @@ public class Bot extends TelegramLongPollingBot {
         String weatherURL = "https://api.openweathermap.org/data/2.5/weather?q=Saratov&units=metric&APPID=" + weatherApiKey;
         HttpURLConnection weatherConnection = webServices.getURLConnection(weatherURL);
         String weatherLine = webServices.getFileContent(weatherConnection);
-
 
         return weatherJson.parseWeatherJson(weatherLine);
     }
@@ -108,10 +111,8 @@ public class Bot extends TelegramLongPollingBot {
         String result = "";
         for (int i = 0; i < 3; i++) {
             entry = (SyndEntry) feed.getEntries().get(i);
-
             result += entry.getTitle() + "\n" + entry.getLink() + "\n";
         }
-
         return result;
     }
 
@@ -133,7 +134,6 @@ public class Bot extends TelegramLongPollingBot {
             buttons.add(keyBoardSecondRow);
             replyKeyboardMarkup.setKeyboard(buttons);
             return "Выбрать";
-
         }
         if (msg.equals("погода")) {
             try {
